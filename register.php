@@ -2,9 +2,90 @@
 include 'dbinit.php';
 
 $accessoryName = $accessoryDescription = $genderCategory = $quantityAvailable = $price = $brand = $color = $imagePath = "";
-$accessoryID = 0;
 $productAddedBy = "Divyangini"; // Hardcoded value for 'Product Added By'
 $update = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['save'])) {
+        $accessoryName = $_POST['AccessoryName'];
+        $accessoryDescription = $_POST['AccessoryDescription'];
+        $genderCategory = $_POST['GenderCategory'];
+        $quantityAvailable = $_POST['QuantityAvailable'];
+        $price = $_POST['Price'];
+        $brand = $_POST['Brand'];
+        $color = $_POST['Color'];
+
+        // Handle image upload
+        $image = $_FILES['Image']['name'];
+        $target_dir = "uploads/";
+        $target_file = $target_dir . basename($image);
+
+        if (move_uploaded_file($_FILES['Image']['tmp_name'], $target_file)) {
+            // Prepare SQL statement
+            $sql_query = "INSERT INTO hair_accessories (AccessoryName, AccessoryDescription, GenderCategory, QuantityAvailable, Price, Brand, Color, ProductAddedBy, ImagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql_query);
+            $stmt->bind_param("sssidssss", $accessoryName, $accessoryDescription, $genderCategory, $quantityAvailable, $price, $brand, $color, $productAddedBy, $target_file);
+            if ($stmt->execute()) {
+                header('Location: index.php');
+            } else {
+                echo "Error: " . $stmt->error;
+            }
+        } else {
+            echo "Error uploading image.";
+        }
+    }
+
+    if (isset($_POST['update'])) {
+        $accessoryID = $_POST['id'];
+        $accessoryName = $_POST['AccessoryName'];
+        $accessoryDescription = $_POST['AccessoryDescription'];
+        $genderCategory = $_POST['GenderCategory'];
+        $quantityAvailable = $_POST['QuantityAvailable'];
+        $price = $_POST['Price'];
+        $brand = $_POST['Brand'];
+        $color = $_POST['Color'];
+        
+        // Handle image upload
+        if (!empty($_FILES['Image']['name'])) {
+            $image = $_FILES['Image']['name'];
+            $target_dir = "uploads/";
+            $target_file = $target_dir . basename($image);
+            move_uploaded_file($_FILES['Image']['tmp_name'], $target_file);
+        } else {
+            $target_file = $_POST['CurrentImage']; // Keep current image if no new image uploaded
+        }
+
+        $stmt = $conn->prepare("UPDATE hair_accessories SET AccessoryName=?, AccessoryDescription=?, GenderCategory=?, QuantityAvailable=?, Price=?, Brand=?, Color=?, ImagePath=? WHERE id=?");
+        $stmt->bind_param("sssidssss", $accessoryName, $accessoryDescription, $genderCategory, $quantityAvailable, $price, $brand, $color, $target_file, $accessoryID);
+        $stmt->execute();
+        header('Location: index.php');
+    }
+}
+
+// Delete accessory
+if (isset($_GET['delete'])) {
+    $accessoryID = $_GET['delete'];
+    $stmt = $conn->prepare("DELETE FROM hair_accessories WHERE id=?");
+    $stmt->bind_param("i", $accessoryID);
+    $stmt->execute();
+    header('Location: index.php');
+}
+
+// Edit accessory
+if (isset($_GET['edit'])) {
+    $accessoryID = $_GET['edit'];
+    $update = true;
+    $result = $conn->query("SELECT * FROM hair_accessories WHERE id=$accessoryID");
+    $row = $result->fetch_array();
+    $accessoryName = $row['AccessoryName'];
+    $accessoryDescription = $row['AccessoryDescription'];
+    $genderCategory = $row['GenderCategory'];
+    $quantityAvailable = $row['QuantityAvailable'];
+    $price = $row['Price'];
+    $brand = $row['Brand'];
+    $color = $row['Color'];
+    $imagePath = $row['ImagePath'];
+}
 
 ?>
 
@@ -23,7 +104,7 @@ $update = false;
 <div class="container mt-5">
     <h2 class="text-center"><?php echo $update ? "Update Accessory" : "Add New Accessory"; ?></h2>
     <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
-        <input type="hidden" name="AccessoryID" value="<?php echo $accessoryID; ?>">
+        <input type="hidden" name="id" value="<?php echo $accessoryID; ?>">
         <input type="hidden" name="CurrentImage" value="<?php echo $imagePath; ?>">
         
         <!-- Accessory Name -->
