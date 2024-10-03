@@ -11,14 +11,9 @@ include 'dbinit.php';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .edit-btn {
-            margin-left: 5px;
-        }
-        .delete-btn {
-            margin-left: 15px;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 <div class="container mt-5">
@@ -54,10 +49,13 @@ include 'dbinit.php';
                 echo "<td>{$row['Color']}</td>";
                 echo "<td><img src='{$row['ImagePath']}' alt='Image' width='50'></td>";
                 echo "<td>
-                        <a href='register.php?edit={$row['id']}' class='text-warning edit-btn'><i class='fas fa-edit'></i></a>
-                        <a href='register.php?delete={$row['id']}' class='text-danger delete-btn' onclick='return confirm(\"Are you sure you want to delete this item?\");'><i class='fas fa-trash'></i></a>
+                        <a href='register.php?edit={$row['id']}' class='text-warning btn-edit'><i class='fas fa-edit'></i></a>
+                        <a href='register.php?delete={$row['id']}' class='text-danger btn-delete'><i class='fas fa-trash'></i></a>
                       </td>";
                 echo "</tr>";
+                // <a href='register.php?delete={$row['id']}' class='text-danger delete-btn' onclick='return confirm(\"Are you sure you want to delete this item?\");'><i class='fas fa-trash'></i></a>
+
+                // <a href="javascript:void(0)" class="btn-delete" data-id="'. $row['id'] .'"> <i class="fas fa-trash-alt text-danger"></i> </a>
             }
             ?>
         </tbody>
@@ -72,6 +70,57 @@ include 'dbinit.php';
     $(document).ready(function() {
         $('#accessoriesTable').DataTable();
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Bind event listener to the delete button
+    document.querySelectorAll('.btn-delete').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var id = this.getAttribute('data-id'); // Get the ID of the item to delete
+
+            // SweetAlert2 confirmation dialog
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to delete this record!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If confirmed, make an AJAX call to delete the item
+                    deleteItem(id);
+                }
+            });
+        });
+    });
+});
+
+// Function to delete the item via AJAX
+function deleteItem(id) {
+    $.ajax({
+        url: 'register.php',  // Your PHP file that handles the deletion
+        type: 'POST',
+        data: { delete_id: id }, // Send the ID of the item to delete
+        success: function(response) {
+            Swal.fire(
+                'Deleted!',
+                'Your item has been deleted.',
+                'success'
+            );
+            // Reload the page or remove the deleted item from the DOM
+            location.reload();
+        },
+        error: function() {
+            Swal.fire(
+                'Error!',
+                'There was an issue deleting the item.',
+                'error'
+            );
+        }
+    });
+}
+
 </script>
 </body>
 </html>
