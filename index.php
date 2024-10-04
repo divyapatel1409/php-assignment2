@@ -50,10 +50,12 @@ include 'dbinit.php';
                 echo "<td><img src='{$row['ImagePath']}' alt='Image' width='50'></td>";
                 echo "<td>
                         <a href='register.php?edit={$row['id']}' class='text-warning btn-edit'><i class='fas fa-edit'></i></a>
-                        <a href='register.php?delete={$row['id']}' class='text-danger btn-delete'><i class='fas fa-trash'></i></a>
+                        <a href='javascript:void(0)' class='text-danger btn-delete' data-id='". $row['id'] ."'> <i class='fas fa-trash-alt text-danger'></i> </a>
                       </td>";
                 echo "</tr>";
                 // <a href='register.php?delete={$row['id']}' class='text-danger delete-btn' onclick='return confirm(\"Are you sure you want to delete this item?\");'><i class='fas fa-trash'></i></a>
+
+                // <a href='register.php?delete={$row['id']}' class='text-danger btn-delete'><i class='fas fa-trash'></i></a>
 
                 // <a href="javascript:void(0)" class="btn-delete" data-id="'. $row['id'] .'"> <i class="fas fa-trash-alt text-danger"></i> </a>
             }
@@ -72,54 +74,48 @@ include 'dbinit.php';
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-    // Bind event listener to the delete button
-    document.querySelectorAll('.btn-delete').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var id = this.getAttribute('data-id'); // Get the ID of the item to delete
+        // Bind event listener to the delete button
+        document.querySelectorAll('.btn-delete').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var id = this.getAttribute('data-id'); // Get the ID of the item to delete
 
-            // SweetAlert2 confirmation dialog
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You want to delete this record!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // If confirmed, make an AJAX call to delete the item
-                    deleteItem(id);
-                }
+                // SweetAlert2 confirmation dialog
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You want to delete this record!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // If confirmed, make an AJAX call to delete the item
+                        deleteItem(id);
+                    }
+                });
             });
         });
     });
-});
 
-// Function to delete the item via AJAX
-function deleteItem(id) {
-    $.ajax({
-        url: 'register.php',  // Your PHP file that handles the deletion
-        type: 'POST',
-        data: { delete_id: id }, // Send the ID of the item to delete
-        success: function(response) {
-            Swal.fire(
-                'Deleted!',
-                'Your item has been deleted.',
-                'success'
-            );
-            // Reload the page or remove the deleted item from the DOM
-            location.reload();
-        },
-        error: function() {
-            Swal.fire(
-                'Error!',
-                'There was an issue deleting the item.',
-                'error'
-            );
-        }
-    });
-}
+    // Function to delete the item via AJAX
+    function deleteItem(id) {
+        $.ajax({
+            url: 'register.php',  // Your PHP file that handles the deletion
+            type: 'POST',
+            data: { delete_id: id }, // Send the ID of the item to delete
+            success: function(response) {
+                location.reload();
+            },
+            error: function() {
+                Swal.fire(
+                    'Error!',
+                    'There was an issue deleting the item.',
+                    'error'
+                );
+            }
+        });
+    }
 
 </script>
 </body>
